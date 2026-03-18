@@ -127,27 +127,12 @@ This project was developed as a comparative study of classical ML vs deep learni
 
 ---
 
-## 🔮 Future Improvements
+##  Future Improvements
 
-### Short Term
 - [ ] Increase audio clip duration to 60 seconds
 - [ ] Collect minimum 2,000 samples per class
 - [ ] Fix missing 1,641 audio files
 - [ ] Add data augmentation (pitch shift, time stretch, noise injection)
-
-### Medium Term
-- [ ] Integrate pretrained YAMNet or VGGish (expected 70–85% accuracy with existing data)
-- [ ] Add chroma + tonnetz features for better aircraft separation
-- [ ] Implement ensemble voting across all 5 models
-- [ ] Add SpecAugment for CNN/LSTM training
-
-### Long Term
-- [ ] Real-time microphone stream detection
-- [ ] Edge deployment — quantize for Raspberry Pi
-- [ ] Confidence threshold alerting system
-- [ ] Multi-label classification (overlapping sounds)
-
----
 
 ## 🏗️ Project Structure
 
