@@ -1,308 +1,323 @@
 # 🎯 Acoustic Threat Detection System
-### Multi-Algorithm Audio Classification — 5 Models, Real Dataset Training
+### Multi-Algorithm Audio Classification — 5 ML Models, Real Dataset, Full Pipeline
+
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.1-orange)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green)
+![React](https://img.shields.io/badge/React-18-61dafb)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ---
 
-## 📁 Project Structure
+## 📌 Project Overview
+
+A complete end-to-end audio threat detection system that classifies environmental sounds into **7 threat categories** using **5 different machine learning algorithms** simultaneously. Built with a FastAPI backend and React frontend, the system allows users to upload audio datasets for training, compare model performance, and run live predictions on new audio files.
+
+This project was developed as a comparative study of classical ML vs deep learning approaches for acoustic threat classification in military/surveillance environments.
+
+---
+
+## 🎯 7 Threat Classes
+
+| Label | Class | Icon | Description |
+|-------|-------|------|-------------|
+| 0 | Gunshot | 🔫 | Pistol/handgun fire |
+| 1 | Rifle Fire | 🎯 | Automatic/semi-auto rifle |
+| 2 | Vehicle | 🚛 | Ground vehicle movement |
+| 3 | Aircraft | ✈️ | Jets, helicopters, drones |
+| 4 | Comms Signal | 📡 | Radio/communication signals |
+| 5 | Explosion | 💥 | Blast/explosion sounds |
+| 6 | Ambient/Safe | 🔇 | Background/safe noise |
+
+---
+
+## 🤖 5 ML Algorithms — Model Parameters
+
+### 1. Support Vector Machine (SVM)
+- **Kernel:** RBF (Radial Basis Function)
+- **C:** 100
+- **Gamma:** scale
+- **Class Weight:** balanced
+- **Max Iterations:** 2000
+- **Input:** 167-dim MFCC flat vector
+
+### 2. Random Forest
+- **n_estimators:** 1000 trees
+- **Max Features:** sqrt
+- **Max Depth:** None (fully grown)
+- **Class Weight:** balanced
+- **n_jobs:** -1 (all CPU cores)
+- **Input:** 167-dim MFCC flat vector
+
+### 3. XGBoost
+- **n_estimators:** 800
+- **Max Depth:** 8
+- **Learning Rate:** 0.05
+- **Subsample:** 0.8
+- **Colsample by Tree:** 0.8
+- **Objective:** multi:softprob
+- **Input:** 167-dim MFCC flat vector
+
+### 4. CNN (Convolutional Neural Network)
+- **Architecture:** 4 Conv2D blocks → Global Avg Pool → FC layers
+- **Epochs:** 30
+- **Batch Size:** 32
+- **Optimizer:** AdamW + CosineAnnealingLR
+- **Learning Rate:** 1e-3
+- **Dropout:** 0.2–0.5
+- **Input:** Mel Spectrogram (128 × 173)
+- **Device:** CUDA GPU / CPU fallback
+
+### 5. BiLSTM + Attention
+- **Architecture:** 3-layer BiLSTM + Attention + FC
+- **Hidden Size:** 256 (×2 bidirectional)
+- **Epochs:** 30
+- **Batch Size:** 32
+- **Optimizer:** AdamW + ReduceLROnPlateau
+- **Learning Rate:** 1e-3
+- **Gradient Clipping:** max_norm=1.0
+- **Input:** MFCC sequence (128 frames × 40 coefficients)
+- **Device:** CUDA GPU / CPU fallback
+
+---
+
+## 📊 Results
+
+| Model | Accuracy | F1 Score | Precision | Recall |
+|-------|----------|----------|-----------|--------|
+| 🚀 XGBoost | **40.84%** | 40.70% | 40.88% | 40.84% |
+| 🌲 Random Forest | 40.31% | 40.15% | 41.13% | 40.31% |
+| 🧠 CNN | 39.34% | 38.06% | 38.97% | 39.34% |
+| 🔄 BiLSTM | 38.64% | 38.82% | 38.26% | 38.64% |
+| ⚡ SVM | 36.47% | 35.90% | 38.51% | 36.47% |
+
+> Tested on held-out test.csv (471 samples). Random baseline = 14.3%. All models ~3x better than random.
+
+---
+
+## ⚠️ Known Limitations & Problems
+
+### 1. Small Dataset — Primary Bottleneck
+- Only ~680 samples per class (4,788 total training)
+- Industry standard: 2,000–5,000 per class for 80%+ accuracy
+
+### 2. Short Audio Clips (25 Seconds)
+- Ambient/Safe achieves highest accuracy because background noise is consistent in short clips
+- Gunshot achieves lowest (13–29%) — 25 seconds may contain only 1–2 gunshot events, model can't learn enough pattern
+- Aircraft and vehicle sounds need longer clips to capture full frequency sweep
+- **Fix planned:** Increase to 60 seconds per clip
+
+### 3. Incomplete Dataset
+- train.csv references 6,429 files but only 4,788 WAV files exist
+- 1,641 files (~25%) missing due to incomplete download from YouTube sources
+
+### 4. Aircraft vs Comms Signal Confusion
+- Both share high-frequency spectral components in MFCC features
+- Models frequently confuse these two classes
+- MFCC doesn't capture directional/doppler aircraft characteristics
+
+### 5. Rifle Fire Dominance
+- Rifle fire has 1,293 samples vs ~773 for others
+- Models bias toward rifle fire predictions
+- Class weighting partially mitigates this
+
+### 6. Python 3.14 CUDA Incompatibility
+- PyTorch CUDA doesn't support Python 3.14
+- Workaround: separate `.venv-cuda` with Python 3.11 + CUDA 12.4
+
+---
+
+## 🔮 Future Improvements
+
+### Short Term
+- [ ] Increase audio clip duration to 60 seconds
+- [ ] Collect minimum 2,000 samples per class
+- [ ] Fix missing 1,641 audio files
+- [ ] Add data augmentation (pitch shift, time stretch, noise injection)
+
+### Medium Term
+- [ ] Integrate pretrained YAMNet or VGGish (expected 70–85% accuracy with existing data)
+- [ ] Add chroma + tonnetz features for better aircraft separation
+- [ ] Implement ensemble voting across all 5 models
+- [ ] Add SpecAugment for CNN/LSTM training
+
+### Long Term
+- [ ] Real-time microphone stream detection
+- [ ] Edge deployment — quantize for Raspberry Pi
+- [ ] Confidence threshold alerting system
+- [ ] Multi-label classification (overlapping sounds)
+
+---
+
+## 🏗️ Project Structure
 
 ```
 threat-detection/
 ├── backend/
-│   └── server.py              ← FastAPI server (main entry point)
+│   └── server.py              ← FastAPI server (port 8001)
 ├── scripts/
-│   ├── feature_extractor.py   ← Shared audio feature extraction
-│   ├── model_svm.py           ← Support Vector Machine
+│   ├── feature_extractor.py   ← MFCC, Mel, Sequence extraction
+│   ├── model_svm.py           ← SVM classifier
 │   ├── model_rf.py            ← Random Forest
 │   ├── model_xgb.py           ← XGBoost
 │   ├── model_cnn.py           ← CNN (PyTorch)
 │   └── model_lstm.py          ← BiLSTM + Attention (PyTorch)
-├── frontend/
-│   └── App.jsx                ← React UI (connect to API at localhost:8000)
-├── models/                    ← Saved trained models (auto-created)
-└── requirements.txt
+├── threat-ui/                 ← Vite React frontend
+│   └── src/App.jsx
+├── models/                    ← Auto-created after training
+│   ├── svm_model.pkl
+│   ├── rf_model.pkl
+│   ├── xgb_model.pkl
+│   ├── cnn_model.pt
+│   ├── lstm_model.pt
+│   └── metrics.json
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## ⚙️ SETUP — Step by Step
+## ⚙️ Feature Extraction
 
-### Step 1: Prerequisites
-
-Make sure you have installed:
-- **Python 3.9 or 3.10** (recommended — TensorFlow doesn't support 3.12 yet)
-- **Node.js 18+** (for the React frontend)
-- **VSCode** with Python extension
-
-Check versions:
-```bash
-python --version
-node --version
+```
+WAV File → Load (22,050 Hz, mono, 4 sec fixed length)
+    ↓
+FLAT (SVM/RF/XGB): 40 MFCC + 40 std + 40 delta + 40 delta2 + 7 spectral = 167 dims
+MEL  (CNN):        128 mel bins × 173 time frames (dB scale)
+SEQ  (LSTM):       128 frames × 40 MFCC coefficients
 ```
 
 ---
 
-### Step 2: Clone / Open Project in VSCode
+## 🚀 Local Setup
 
+### Prerequisites
+- Python 3.11
+- Node.js 18+
+- NVIDIA GPU with CUDA 12.4+ (optional)
+- 10GB+ free disk space
+
+### Step 1 — Clone
 ```bash
+git clone https://github.com/yourusername/threat-detection.git
 cd threat-detection
-code .
 ```
 
-Open a **new terminal** inside VSCode (`Ctrl + `` ` ``).
+### Step 2 — Python Environment
 
----
-
-### Step 3: Create Python Virtual Environment
-
+**CPU only:**
 ```bash
+python -m venv .venv
+
 # Windows
-python -m venv venv
-venv\Scripts\activate
+.venv\Scripts\Activate.ps1
 
-# Mac / Linux
-python3 -m venv venv
-source venv/bin/activate
-```
+# Mac/Linux
+source .venv/bin/activate
 
-You should see `(venv)` in your terminal prompt.
-
----
-
-### Step 4: Install Python Dependencies
-
-```bash
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-> ⏳ This installs PyTorch, TensorFlow, librosa, FastAPI, XGBoost etc.
-> Takes 5–10 minutes on first install.
-
-**If you have a GPU (NVIDIA CUDA):**
+**With NVIDIA GPU:**
 ```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+py -3.11 -m venv .venv-cuda
+
+# Windows
+.venv-cuda\Scripts\Activate.ps1
+
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu124
+pip install fastapi uvicorn python-multipart numpy pandas librosa scikit-learn xgboost joblib scipy soundfile
 ```
 
-**If GPU install fails, CPU-only works fine:**
+### Step 3 — Verify GPU
 ```bash
-pip install torch torchvision torchaudio
+python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
 ```
 
----
-
-### Step 5: Start the Backend API Server
-
+### Step 4 — Start Backend
 ```bash
-# From the threat-detection/ root folder:
 cd backend
 python server.py
+# Runs on http://localhost:8001
+# API docs: http://localhost:8001/docs
 ```
 
-You should see:
-```
-INFO:     Started server process
-INFO:     Uvicorn running on http://0.0.0.0:8000
-```
-
-✅ Keep this terminal open — this is your backend.
-
-Test it's working:
-```
-http://localhost:8000/health     → should return {"status":"ok"}
-http://localhost:8000/docs       → Swagger UI for all endpoints
-```
-
----
-
-### Step 6: Setup React Frontend
-
-Open a **second terminal** in VSCode:
-
+### Step 5 — Start Frontend
 ```bash
-# Option A: Use with Create React App
-npx create-react-app threat-ui
 cd threat-ui
-cp ../frontend/App.jsx src/App.js
-
-# Install extra deps
 npm install
-
-# Start the dev server
-npm start
+npm run dev -- --port 5176
+# Opens at http://localhost:5176
 ```
 
+### Step 6 — Prepare Dataset ZIP
+
+Dataset folder must contain:
+```
+audio/
+├── train.csv     (path, label columns)
+├── test.csv      (path, label columns)
+└── files/
+    ├── training/
+    │   └── 001/ *.wav ...
+    └── test/
+        └── 227/ *.wav ...
+```
+
+**Zip it:**
 ```bash
-# Option B: Use with Vite (faster, recommended)
-npm create vite@latest threat-ui -- --template react
-cd threat-ui
-cp ../frontend/App.jsx src/App.jsx
-npm install
-npm run dev
+# Windows
+Compress-Archive -Path audio -DestinationPath dataset.zip
+
+# Mac/Linux
+zip -r dataset.zip audio/
 ```
 
-Frontend will open at: **http://localhost:3000** (CRA) or **http://localhost:5173** (Vite)
+### Step 7 — Train via UI
+1. Open `http://localhost:5176`
+2. Go to **TRAIN** tab → drop `dataset.zip`
+3. Wait ~25–35 min (CPU) or ~10–15 min (GPU)
+4. Auto-switches to **COMPARISON** tab
+
+### Step 8 — Predict
+1. Go to **PREDICT** tab
+2. Drop any `.wav` or `.mp3` file
+3. Click **IDENTIFY SOUND CLASS**
+4. All 5 models predict simultaneously
 
 ---
 
-### Step 7: Prepare Your Dataset
+## 🔌 API Reference
 
-Organize your WAV files like this:
-```
-my_dataset/
-├── gunshot/
-│   ├── shot_001.wav
-│   ├── shot_002.wav
-│   └── ...
-├── rifle_fire/
-│   ├── rifle_001.wav
-│   └── ...
-├── vehicle/
-│   └── ...
-├── aircraft/
-│   └── ...
-├── comms_signal/
-│   └── ...
-└── ambient/
-    └── ...
-```
-
-> 📌 Folder names = class labels. Use any names you want.
-> Recommended: ~800–1200 samples per class minimum.
-
-**Zip the dataset folder:**
-```bash
-# Windows (PowerShell)
-Compress-Archive -Path my_dataset -DestinationPath dataset.zip
-
-# Mac / Linux
-zip -r dataset.zip my_dataset/
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| GET | `/status` | Training progress |
+| GET | `/results` | Model metrics |
+| GET | `/load` | Load saved models |
+| POST | `/train` | Upload ZIP → train |
+| POST | `/predict` | Upload WAV → predict |
 
 ---
 
-### Step 8: Train All 5 Models via the UI
-
-1. Open **http://localhost:3000** in your browser
-2. Go to the **"TRAIN MODELS"** tab
-3. Drop your `dataset.zip` into the upload zone
-4. Watch real-time logs as all 5 models train automatically
-5. When done, the UI switches to **"COMPARISON"** tab automatically
-
----
-
-### Step 9: Run Training from Command Line (alternative)
-
-You can also train directly without the UI:
-
-```bash
-# From threat-detection/ root
-python scripts/feature_extractor.py /path/to/my_dataset    # verify dataset loads
-
-# Train individual models:
-python -c "
-import sys; sys.path.insert(0,'scripts')
-from feature_extractor import load_dataset
-from model_svm import run
-X, y, names = load_dataset('/path/to/my_dataset', 'flat')
-run(X, y, names)
-"
-```
-
----
-
-## 🔌 API Endpoints
-
-| Method | Endpoint    | Description                            |
-|--------|-------------|----------------------------------------|
-| GET    | /health     | Check server is running                |
-| GET    | /status     | Training progress + logs               |
-| GET    | /results    | All 5 model metrics after training     |
-| POST   | /train      | Upload dataset.zip → start training    |
-| POST   | /predict    | Upload WAV file → get all predictions  |
-
-Swagger docs: `http://localhost:8000/docs`
-
----
-
-## 🧠 Model Architecture Summary
-
-| Model        | Input Features         | Architecture                       | Best For                  |
-|--------------|------------------------|------------------------------------|---------------------------|
-| **SVM**      | MFCC flat (168-dim)    | RBF kernel, C=10                   | Fast baseline              |
-| **RF**       | MFCC flat (168-dim)    | 500 trees, sqrt features           | Explainability            |
-| **XGBoost**  | MFCC flat (168-dim)    | 400 estimators, depth=6            | Speed + accuracy balance  |
-| **CNN**      | Mel spectrogram (2D)   | 4 conv blocks + GAP + FC           | Best accuracy              |
-| **BiLSTM**   | MFCC sequence (128×40) | 3-layer BiLSTM + attention + FC    | Temporal patterns          |
-
----
-
-## 📦 Exported Model Files
-
-After training, models are saved to `models/`:
-```
-models/
-├── svm_model.pkl       ← joblib (sklearn Pipeline)
-├── rf_model.pkl        ← joblib (sklearn Pipeline)
-├── xgb_model.pkl       ← joblib (XGBClassifier + scaler dict)
-├── cnn_model.pt        ← PyTorch state dict
-└── lstm_model.pt       ← PyTorch state dict
-```
-
-Load and use later:
-```python
-# SVM / RF
-import joblib
-model = joblib.load("models/svm_model.pkl")
-
-# CNN / LSTM
-import torch
-ckpt = torch.load("models/cnn_model.pt")
-
-# Predict a single file
-from scripts.model_cnn import predict_file
-pred_idx, probas = predict_file("test.wav")
-```
-
----
-
-## 🔧 Common Errors & Fixes
+## 🛠️ Troubleshooting
 
 | Error | Fix |
 |-------|-----|
-| `ModuleNotFoundError: librosa` | Run `pip install -r requirements.txt` with venv active |
-| `CORS error in browser` | Make sure backend is running on port 8000 |
-| `Port 8000 in use` | `kill -9 $(lsof -t -i:8000)` or change port in server.py |
-| `OutOfMemoryError (GPU)` | Reduce BATCH_SIZE in model_cnn.py / model_lstm.py |
-| `No module named 'scripts'` | Run server.py from the `backend/` folder, not root |
-| `ZIP extraction failed` | Ensure zip has folder-per-class structure directly inside |
+| `No module named 'fastapi'` | Activate venv + `pip install -r requirements.txt` |
+| `Port 8001 already in use` | `Stop-Process -Id (Get-NetTCPConnection -LocalPort 8001).OwningProcess -Force` |
+| `No module named 'scripts'` | Run `server.py` from inside `backend/` folder |
+| `CUDA not available` | Use Python 3.11 + `pip install torch --index-url https://download.pytorch.org/whl/cu124` |
+| Blank UI | Check F12 console, verify backend on correct port |
 
 ---
 
-## 📊 Expected Training Times (6,000 samples, CPU)
 
-| Model   | Time      |
-|---------|-----------|
-| SVM     | 2–4 min   |
-| RF      | 1–2 min   |
-| XGBoost | 3–5 min   |
-| CNN     | 15–25 min |
-| BiLSTM  | 20–30 min |
+## 🙏 Acknowledgements
 
-> With NVIDIA GPU: CNN and LSTM train 5–10× faster.
-
----
-
-## 🚀 Quick Start Summary
-
-```bash
-# Terminal 1 — Backend
-cd threat-detection/backend
-source ../venv/bin/activate   # (or venv\Scripts\activate on Windows)
-python server.py
-
-# Terminal 2 — Frontend
-cd threat-detection/threat-ui
-npm start
-```
-
-Then open `http://localhost:3000` and drop your dataset ZIP!
+- [librosa](https://librosa.org/) — audio processing
+- [PyTorch](https://pytorch.org/) — deep learning
+- [scikit-learn](https://scikit-learn.org/) — classical ML
+- [XGBoost](https://xgboost.readthedocs.io/) — gradient boosting
+- [FastAPI](https://fastapi.tiangolo.com/) — REST API
+- [Vite + React](https://vitejs.dev/) — frontend
