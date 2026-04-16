@@ -12,3 +12,6 @@ dataset.zip
 dist/
 .DS_Store
 *.log
+threat-detection-v3/models_v2/*.pkl
+threat-detection-v3/models_v3/*.pkl
+threat-detection-v3/models/*.pkl

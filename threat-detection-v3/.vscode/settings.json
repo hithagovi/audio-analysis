@@ -1,0 +1,5 @@
+{
+    "python.defaultInterpreterPath": "c:\\Projects\\ALGORITHM\\threat-detection-v2\\.venv-cuda\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [],
+    "python.analysis.autoSearchPaths": true
+}
